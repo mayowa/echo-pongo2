@@ -14,7 +14,8 @@ e.SetRenderer(r)
 somewhere in a handler
 ```
 func Hello(c *echo.Context) error {
-    return c.Render(http.StatusOK, "hello.html", "World")
+    data := map[string]string{"World":"mayowa"}
+    return c.Render(http.StatusOK, "hello.html", data)
 }
 ```
 
