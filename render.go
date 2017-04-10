@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
-
+	"github.com/labstack/echo"
 	"github.com/flosch/pongo2"
 )
 
@@ -40,7 +40,7 @@ func NewRenderer(baseDir string) (*Renderer, error) {
 }
 
 // Render implements echo.Render interface
-func (r *Renderer) Render(w io.Writer, name string, data interface{}) error {
+func (r *Renderer) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
 	// get template, compile it anf store it in cache
 	tpl, err := r.TplSet.FromCache(name)
 	if err != nil {
