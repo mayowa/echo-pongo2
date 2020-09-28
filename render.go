@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 
 	"github.com/flosch/pongo2/v4"
 	"github.com/labstack/echo/v4"
@@ -98,15 +97,16 @@ func (r *Renderer) Render(w io.Writer, name string, data interface{}, c echo.Con
 func toPongoCtx(data interface{}) (pongo2.Context, error) {
 	m := pongo2.Context{}
 
-	v := reflect.ValueOf(data)
+	v := reflect.Indirect(reflect.ValueOf(data))
 	if v.Type().String() == "pongo2.Context" {
 		return data.(pongo2.Context), nil
 	} else if v.Kind().String() == "struct" {
 		for i := 0; i < v.NumField(); i++ {
 			m[v.Type().Field(i).Name] = v.Field(i).Interface()
 		}
-	} else if strings.HasPrefix(v.Type().String(), "map[string]") {
+	} else if v.Type().Kind() == reflect.Map && v.Type().Key().Kind() == reflect.String {
 		for _, k := range v.MapKeys() {
+			fmt.Println("k:", k.String(), k)
 			m[k.String()] = v.MapIndex(k).Interface()
 		}
 	} else {

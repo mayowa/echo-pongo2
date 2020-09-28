@@ -2,7 +2,6 @@ package echopongo2
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -254,12 +253,12 @@ func TestToPongoCtx(t *testing.T) {
 	}
 
 	// test map[string]string
-	m2 := map[string]string{"a": "1", "b": "2", "c": "3"}
+	m2 := map[string]string{"d": "1", "e": "2", "f": "3"}
 	retv, err = toPongoCtx(m2)
 	if err != nil {
 		t.Error(err)
 	}
-	if retv["a"] != "1" || retv["b"] != "2" || retv["c"] != "3" {
+	if retv["d"] != "1" || retv["e"] != "2" || retv["f"] != "3" {
 		t.Errorf("[Map-String-Int] Input data was mangled: is %v should be %v", retv, m2)
 	}
 
@@ -267,7 +266,27 @@ func TestToPongoCtx(t *testing.T) {
 	m3 := map[int]string{1: "1", 2: "2", 3: "3"}
 	retv, err = toPongoCtx(m3)
 	if err == nil {
-		t.Error(fmt.Errorf("only map[string] is supported. An error should have been returned: %v", retv))
+		t.Error("retv:", retv)
 	}
 
+	// test map based type
+	type Map map[string]int
+	m4 := Map{"g": 1, "h": 2, "i": 3}
+	retv, err = toPongoCtx(m4)
+	if err != nil {
+		t.Error(err)
+	}
+	if retv["g"] != 1 || retv["h"] != 2 || retv["i"] != 3 {
+		t.Errorf("[Map-String-Int] Input data was mangled: is %v should be %v", retv, m4)
+	}
+
+	type Map2 map[string]interface{}
+	m5 := Map2{"g": 1, "h": "2", "i": false}
+	retv, err = toPongoCtx(m5)
+	if err != nil {
+		t.Error(err)
+	}
+	if retv["g"] != 1 || retv["h"] != "2" || retv["i"] != false {
+		t.Errorf("[Map-String-Int] Input data was mangled: is %v should be %v", retv, m5)
+	}
 }
