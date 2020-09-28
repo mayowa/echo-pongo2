@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/flosch/pongo2"
+	"github.com/flosch/pongo2/v4"
 )
 
 func TestRenderer(t *testing.T) {
@@ -30,7 +30,7 @@ func TestRender(t *testing.T) {
 	}
 
 	buff := bytes.Buffer{}
-	err = tpl.Render(&buff, tplNme, map[string]string{"World": "mayowa"})
+	err = tpl.Render(&buff, tplNme, map[string]string{"World": "mayowa"}, nil)
 	if err != nil {
 		t.Error(err)
 	}
