@@ -3,6 +3,7 @@ package echopongo2
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -41,6 +42,139 @@ func TestRender(t *testing.T) {
 
 }
 
+func TestRenderWithDebug(t *testing.T) {
+	baseDir := "/tmp"
+	tpl, err := NewRenderer(baseDir, Options{Debug: true})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	tplNme, err := makeTemplate(baseDir)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	buff := bytes.Buffer{}
+	err = tpl.Render(&buff, tplNme, map[string]string{"World": "mayowa"}, nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if buff.String() != "Hello mayowa!" {
+		t.Errorf("Template not properly rendered: got ==> %s", buff.String())
+		return
+	}
+
+	err = modifyTemplate(baseDir, tplNme, "jumping {{World}}!")
+	if err != nil {
+		t.Error(err)
+	}
+
+	buff = bytes.Buffer{}
+	err = tpl.Render(&buff, tplNme, map[string]string{"World": "mayowa"}, nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if buff.String() != "jumping mayowa!" {
+		t.Errorf("Template not properly rendered: got ==> %s", buff.String())
+		return
+	}
+
+}
+
+func TestRenderWithSource(t *testing.T) {
+	baseDir := "/tmp"
+	tpl, err := NewRenderer(baseDir, Options{Source: FromFile})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	tplNme, err := makeTemplate(baseDir)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	buff := bytes.Buffer{}
+	err = tpl.Render(&buff, tplNme, map[string]string{"World": "mayowa"}, nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if buff.String() != "Hello mayowa!" {
+		t.Errorf("Template not properly rendered: got ==> %s", buff.String())
+		return
+	}
+
+	err = modifyTemplate(baseDir, tplNme, "jumping {{World}}!")
+	if err != nil {
+		t.Error(err)
+	}
+
+	buff = bytes.Buffer{}
+	err = tpl.Render(&buff, tplNme, map[string]string{"World": "mayowa"}, nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if buff.String() != "jumping mayowa!" {
+		t.Errorf("Template not properly rendered: got ==> %s", buff.String())
+		return
+	}
+}
+
+func TestRenderWithoutSource(t *testing.T) {
+	baseDir := "/tmp"
+	tpl, err := NewRenderer(baseDir)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	tplNme, err := makeTemplate(baseDir)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	buff := bytes.Buffer{}
+	err = tpl.Render(&buff, tplNme, map[string]string{"World": "mayowa"}, nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if buff.String() != "Hello mayowa!" {
+		t.Errorf("Template not properly rendered: got ==> %s", buff.String())
+		return
+	}
+
+	err = modifyTemplate(baseDir, tplNme, "jumping {{World}}!")
+	if err != nil {
+		t.Error(err)
+	}
+
+	buff = bytes.Buffer{}
+	err = tpl.Render(&buff, tplNme, map[string]string{"World": "mayowa"}, nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if buff.String() != "Hello mayowa!" {
+		t.Errorf("Template not properly rendered: got ==> %s", buff.String())
+		return
+	}
+}
+
 // make a on disk template and return its name
 func makeTemplate(baseDir string) (string, error) {
 	tplStr := `Hello {{World}}!`
@@ -57,6 +191,17 @@ func makeTemplate(baseDir string) (string, error) {
 	}
 
 	return "test1.html", nil
+}
+
+func modifyTemplate(baseDir, name, content string) error {
+
+	fNme := filepath.Join(baseDir, name)
+	err := ioutil.WriteFile(fNme, []byte(content), 0x777)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func TestToPongoCtx(t *testing.T) {
