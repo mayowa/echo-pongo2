@@ -49,7 +49,12 @@ func NewRenderer(baseDir string, opts ...Options) (*Renderer, error) {
 
 	rdr := Renderer{}
 
-	pongo2.RegisterFilter("mix", MixManifest(opts[0].MixManifestFolder))
+	if opts != nil {
+		err := rdr.RegisterFilter("mix", MixManifest(opts[0].MixManifestFolder))
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	for _, i := range opts {
 		rdr.debug = i.Debug
@@ -121,5 +126,9 @@ func toPongoCtx(data interface{}) (pongo2.Context, error) {
 
 // RegisterFilter ...
 func (r *Renderer) RegisterFilter(name string, fn pongo2.FilterFunction) error {
+	if pongo2.FilterExists(name) {
+		return pongo2.ReplaceFilter(name, fn)
+	}
+
 	return pongo2.RegisterFilter(name, fn)
 }
