@@ -2,6 +2,7 @@ package echopongo2
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -192,6 +193,23 @@ func makeTemplate(baseDir string) (string, error) {
 	return "test1.html", nil
 }
 
+func makeMixTemplate(baseDir, res string) (string, error) {
+	tplStr := fmt.Sprintf(`File {{ "%s" | mix }}!`, res)
+	fNme := filepath.Join(baseDir, "mix1.html")
+	fHdl, err := os.Create(fNme)
+	if err != nil {
+		return "", err
+	}
+	defer fHdl.Close()
+
+	_, err = fHdl.WriteString(tplStr)
+	if err != nil {
+		return "", err
+	}
+
+	return "mix1.html", nil
+}
+
 func modifyTemplate(baseDir, name, content string) error {
 
 	fNme := filepath.Join(baseDir, name)
@@ -288,5 +306,46 @@ func TestToPongoCtx(t *testing.T) {
 	}
 	if retv["g"] != 1 || retv["h"] != "2" || retv["i"] != false {
 		t.Errorf("[Map-String-Int] Input data was mangled: is %v should be %v", retv, m5)
+	}
+}
+
+func TestMixManifest(t *testing.T) {
+	mixFolder := "./files"
+	mixFn := MixManifest(mixFolder)
+
+	retv, err := mixFn(pongo2.AsSafeValue("/css/app.css"), nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if retv.String() != "/css/app12345.css" {
+		t.Errorf("cant find resource is the manifest")
+		return
+	}
+
+	baseDir := "/tmp"
+	tpl, err2 := NewRenderer(baseDir, Options{Debug: true, MixManifestFolder: mixFolder})
+	if err2 != nil {
+		t.Error(err2)
+		return
+	}
+
+	tplNme, err2 := makeMixTemplate(baseDir, "/css/app.css")
+	if err2 != nil {
+		t.Error(err2)
+		return
+	}
+
+	buff := bytes.Buffer{}
+	err2 = tpl.Render(&buff, tplNme, map[string]string{"World": "mayowa"}, nil)
+	if err != nil {
+		t.Error(err2)
+		return
+	}
+
+	if buff.String() != "File /css/app12345.css!" {
+		t.Errorf("Template not properly rendered: got ==> %s", buff.String())
+		return
 	}
 }

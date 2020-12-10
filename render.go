@@ -31,8 +31,9 @@ const (
 
 // Options to modify the renders behavior
 type Options struct {
-	Debug  bool
-	Source RenderSource
+	Debug             bool
+	Source            RenderSource
+	MixManifestFolder string
 }
 
 // NewRenderer creates a new instance of Renderer
@@ -47,6 +48,8 @@ func NewRenderer(baseDir string, opts ...Options) (*Renderer, error) {
 	}
 
 	rdr := Renderer{}
+
+	pongo2.RegisterFilter("mix", MixManifest(opts[0].MixManifestFolder))
 
 	for _, i := range opts {
 		rdr.debug = i.Debug
@@ -106,7 +109,7 @@ func toPongoCtx(data interface{}) (pongo2.Context, error) {
 		}
 	} else if v.Type().Kind() == reflect.Map && v.Type().Key().Kind() == reflect.String {
 		for _, k := range v.MapKeys() {
-			fmt.Println("k:", k.String(), k)
+			// fmt.Println("k:", k.String(), k)
 			m[k.String()] = v.MapIndex(k).Interface()
 		}
 	} else {
@@ -114,4 +117,9 @@ func toPongoCtx(data interface{}) (pongo2.Context, error) {
 	}
 
 	return m, nil
+}
+
+// RegisterFilter ...
+func (r *Renderer) RegisterFilter(name string, fn pongo2.FilterFunction) error {
+	return pongo2.RegisterFilter(name, fn)
 }
