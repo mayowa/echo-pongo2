@@ -17,6 +17,7 @@ type Renderer struct {
 	TplSet  *pongo2.TemplateSet
 	debug   bool
 	source  RenderSource
+	globals map[string]interface{}
 }
 
 // RenderSource source from which template will be rendered
@@ -69,6 +70,9 @@ func NewRenderer(baseDir string, opts ...Options) (*Renderer, error) {
 	rdr.TplSet = pongo2.NewSet("TplSet-"+filepath.Base(baseDir), loader)
 	rdr.TplSet.Debug = rdr.debug
 
+	// allocate globals map
+	rdr.globals = make(map[string]interface{})
+
 	return &rdr, nil
 }
 
@@ -93,6 +97,11 @@ func (r *Renderer) Render(w io.Writer, name string, data interface{}, c echo.Con
 	val, err := toPongoCtx(data)
 	if err != nil {
 		return err
+	}
+
+	// add globals to new context
+	for k, v := range r.globals {
+		val[k] = v
 	}
 
 	// generate render the template
@@ -131,4 +140,9 @@ func (r *Renderer) RegisterFilter(name string, fn pongo2.FilterFunction) error {
 	}
 
 	return pongo2.RegisterFilter(name, fn)
+}
+
+// SetGlobal ...
+func (r *Renderer) SetGlobal(name string, val interface{}) {
+	r.globals[name] = val
 }

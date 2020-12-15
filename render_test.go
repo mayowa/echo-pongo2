@@ -193,6 +193,22 @@ func makeTemplate(baseDir string) (string, error) {
 	return "test1.html", nil
 }
 
+func templateMaker(baseDir, name, tplStr string) (string, error) {
+	fNme := filepath.Join(baseDir, fmt.Sprintf("%s.html", name))
+	fHdl, err := os.Create(fNme)
+	if err != nil {
+		return "", err
+	}
+	defer fHdl.Close()
+
+	_, err = fHdl.WriteString(tplStr)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s.html", name), nil
+}
+
 func makeMixTemplate(baseDir, res string) (string, error) {
 	tplStr := fmt.Sprintf(`File {{ "%s" | mix }}!`, res)
 	fNme := filepath.Join(baseDir, "mix1.html")
@@ -348,4 +364,30 @@ func TestMixManifest(t *testing.T) {
 		t.Errorf("Template not properly rendered: got ==> %s", buff.String())
 		return
 	}
+}
+
+func TestRenderGlobals(t *testing.T) {
+	baseDir := "/tmp"
+	tpl, err := NewRenderer(baseDir)
+	if err != nil {
+		t.Error(err)
+	}
+
+	tplNme, err := templateMaker(baseDir, "globals", `Hello {{World}} {{gbl}}`)
+	if err != nil {
+		t.Error(err)
+	}
+
+	tpl.SetGlobal("gbl", "snacks")
+
+	buff := bytes.Buffer{}
+	err = tpl.Render(&buff, tplNme, map[string]string{"World": "mayowa"}, nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if buff.String() != "Hello mayowa snacks" {
+		t.Errorf("Template not properly rendered: got ==> %s", buff.String())
+	}
+
 }
